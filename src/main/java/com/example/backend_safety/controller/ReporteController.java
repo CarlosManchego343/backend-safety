@@ -13,6 +13,7 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/reportes")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:4200")
 public class ReporteController {
 
 	private final ReporteService reporteService;
