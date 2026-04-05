@@ -1,21 +1,26 @@
 package Service;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import Entity.Usuario;
-import Repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import Repository.UsuarioRepository;
+import Config.JwtService;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-	private final UsuarioRepository usuarioRepository;
-	private final PasswordEncoder passwordEncoder;
+	private final UsuarioRepository repo;
+    private final JwtService jwtService;
 
-	public Usuario register(Usuario usuario){
-		usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
-		return usuarioRepository.save(usuario);
-	}
+    public String login(String email, String password) {
+
+        var user = repo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        if (!user.getContrasenia().equals(password)) {
+            throw new RuntimeException("Credenciales inválidas");
+        }
+
+        return jwtService.generateToken(user.getCorreo());
+    }
 }

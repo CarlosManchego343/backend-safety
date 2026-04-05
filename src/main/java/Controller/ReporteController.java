@@ -1,31 +1,44 @@
 package Controller;
 
-import java.util.List;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import Entity.Reporte;
-import Service.ReporteService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.http.*;
+
+import Service.ReporteService;
+import Service.ReportePdfService;
+
+import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/reportes")
+@RequestMapping("/api/reportes")
 @RequiredArgsConstructor
 public class ReporteController {
-	
+
 	private final ReporteService reporteService;
+    private final ReportePdfService pdfService;
 
-	@GetMapping
-	public List<Reporte> listar(){
-		return reporteService.listarReportes();
-	}
+    @GetMapping("/pdf")
+    public ResponseEntity<byte[]> generarPdf(
+            @RequestParam(required = false) String fechaInicio,
+            @RequestParam(required = false) String fechaFin,
+            @RequestParam(required = false) Long usuarioId,
+            @RequestParam(required = false) String nivelRiesgo,
+            @RequestParam(required = false) String estadoRiesgo
+    ) {
 
-	@PostMapping
-	public Reporte generar(@RequestBody Reporte reporte){
-		return reporteService.generarReporte(reporte);
-	}
+        var data = reporteService.generarReporte(
+                fechaInicio != null ? LocalDate.parse(fechaInicio) : null,
+                fechaFin != null ? LocalDate.parse(fechaFin) : null,
+                usuarioId,
+                nivelRiesgo,
+                estadoRiesgo
+        );
+
+        byte[] pdf = pdfService.generarPdf(data);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=reporte.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+    }
 }

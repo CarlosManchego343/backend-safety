@@ -1,15 +1,23 @@
 package Repository;
 
-import java.util.List;
-
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.*;
 
-import Entity.Actividad;
+import java.time.LocalDate;
+import java.util.List;
+import Model.Actividad;
 
-@Repository
-public interface ActividadRepository extends JpaRepository<Actividad,Long>{
-
-	List<Actividad> findByTrabajadorId(Long trabajadorId);
-
+public interface ActividadRepository extends JpaRepository<Actividad, Long> {
+	
+	@Query("""
+	        SELECT a FROM Actividad a
+	        WHERE (:fechaInicio IS NULL OR a.fecha >= :fechaInicio)
+	        AND (:fechaFin IS NULL OR a.fecha <= :fechaFin)
+	        AND (:usuarioId IS NULL OR a.usuario.id = :usuarioId)
+	    """)
+	    List<Actividad> filtrarActividades(
+	            LocalDate fechaInicio,
+	            LocalDate fechaFin,
+	            Long usuarioId
+	    );
 }
