@@ -29,15 +29,20 @@ public class RiesgoService {
         else if (valor <= 15) nivel = "MEDIO";
         else nivel = "ALTO";
 
-        EvaluacionRiesgo eval = new EvaluacionRiesgo();
+        EvaluacionRiesgo eval = evalRepo.findByRiesgo(riesgo)
+                .orElse(null);
+
+        if (eval == null) {
+            eval = new EvaluacionRiesgo();
+            eval.setRiesgo(riesgo);
+        }
+
         eval.setProbabilidad(probabilidad);
         eval.setImpacto(impacto);
         eval.setNivelCalculado(nivel);
-        eval.setRiesgo(riesgo);
 
         evalRepo.save(eval);
 
-        // 🔥 actualizar riesgo
         riesgo.setNivel(nivel);
         riesgoRepo.save(riesgo);
 

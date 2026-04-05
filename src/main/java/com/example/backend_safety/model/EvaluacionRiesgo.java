@@ -21,7 +21,7 @@ public class EvaluacionRiesgo {
     private String nivelCalculado;
 
     @ManyToOne
-    @JoinColumn(name = "id_riesgo")
+    @JoinColumn(name = "id_riesgo", unique = true)
     @JsonIgnore
     private Riesgo riesgo;
 }
