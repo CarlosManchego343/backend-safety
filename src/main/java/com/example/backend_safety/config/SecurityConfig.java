@@ -13,19 +13,27 @@ import lombok.RequiredArgsConstructor;
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
-	
-	@Bean
+
+    private final JwtFilter jwtFilter; // 👈 IMPORTANTE (inyectar el filtro)
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
             .cors()
             .and()
             .csrf().disable()
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 👈 API sin sesiones
+            )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/auth/**").permitAll()
                 .anyRequest().authenticated()
-            );
+            )
+            // 👇 AQUÍ ESTÁ LA CLAVE DEL PROBLEMA
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 }
