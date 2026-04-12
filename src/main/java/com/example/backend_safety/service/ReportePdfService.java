@@ -14,49 +14,78 @@ public class ReportePdfService {
 
 	public byte[] generarPdf(Map<String, Object> data) {
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+	    ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        try {
-            PdfWriter writer = new PdfWriter(out);
-            PdfDocument pdf = new PdfDocument(writer);
-            Document document = new Document(pdf);
+	    try {
+	        PdfWriter writer = new PdfWriter(out);
+	        PdfDocument pdf = new PdfDocument(writer);
+	        Document document = new Document(pdf);
 
-            document.add(new Paragraph("REPORTE SG-SST")
-                    .setBold()
-                    .setFontSize(18)
-                    .setTextAlignment(TextAlignment.CENTER));
+	        // 🎨 Título
+	        Paragraph titulo = new Paragraph("REPORTE SG-SST")
+	                .setBold()
+	                .setFontSize(20)
+	                .setTextAlignment(TextAlignment.CENTER);
 
-            document.add(new Paragraph("\n"));
+	        document.add(titulo);
+	        document.add(new Paragraph("\n"));
 
-            document.add(new Paragraph("Total Actividades: " + data.get("totalActividades")));
-            document.add(new Paragraph("Riesgos Altos: " + data.get("riesgosAltos")));
-            document.add(new Paragraph("Riesgos Medios: " + data.get("riesgosMedios")));
-            document.add(new Paragraph("Riesgos Bajos: " + data.get("riesgosBajos")));
+	        // 📊 Resumen
+	        document.add(new Paragraph("Resumen General")
+	                .setBold()
+	                .setFontSize(14));
 
-            document.add(new Paragraph("\n"));
+	        document.add(new Paragraph("Total Actividades: " + data.get("totalActividades")));
+	        document.add(new Paragraph("Riesgos Altos: " + data.get("riesgosAltos")));
+	        document.add(new Paragraph("Riesgos Medios: " + data.get("riesgosMedios")));
+	        document.add(new Paragraph("Riesgos Bajos: " + data.get("riesgosBajos")));
 
-            Table table = new Table(3);
+	        document.add(new Paragraph("\n"));
 
-            table.addHeaderCell("ID");
-            table.addHeaderCell("Nivel");
-            table.addHeaderCell("Estado");
+	        // 📋 Tabla estilizada
+	        Table table = new Table(new float[]{2, 2, 2});
+	        table.setWidth(100);
 
-            var riesgos = (java.util.List<com.example.backend_safety.model.Riesgo>) data.get("riesgos");
+	        table.addHeaderCell(new Cell().add(new Paragraph("ID").setBold()));
+	        table.addHeaderCell(new Cell().add(new Paragraph("Nivel").setBold()));
+	        table.addHeaderCell(new Cell().add(new Paragraph("Estado").setBold()));
 
-            for (var r : riesgos) {
-                table.addCell(String.valueOf(r.getId()));
-                table.addCell(r.getNivel());
-                table.addCell(r.getEstado());
-            }
+	        var riesgos = (java.util.List<com.example.backend_safety.model.Riesgo>) data.get("riesgos");
 
-            document.add(table);
+	        for (var r : riesgos) {
 
-            document.close();
+	            table.addCell(String.valueOf(r.getId()));
 
-        } catch (Exception e) {
-            throw new RuntimeException("Error generando PDF", e);
-        }
+	            // 🎨 Color según nivel
+	            String nivel = r.getNivel();
+	            Cell nivelCell = new Cell().add(new Paragraph(nivel));
 
-        return out.toByteArray();
-    }
+	            if ("ALTO".equals(nivel)) {
+	                nivelCell.setBackgroundColor(com.itextpdf.kernel.colors.ColorConstants.RED);
+	            } else if ("MEDIO".equals(nivel)) {
+	                nivelCell.setBackgroundColor(com.itextpdf.kernel.colors.ColorConstants.YELLOW);
+	            } else {
+	                nivelCell.setBackgroundColor(com.itextpdf.kernel.colors.ColorConstants.GREEN);
+	            }
+
+	            table.addCell(nivelCell);
+	            table.addCell(r.getEstado());
+	        }
+
+	        document.add(table);
+
+	        // 📌 Footer
+	        document.add(new Paragraph("\n"));
+	        document.add(new Paragraph("Sistema SG-SST - Reporte generado automáticamente")
+	                .setFontSize(10)
+	                .setTextAlignment(TextAlignment.CENTER));
+
+	        document.close();
+
+	    } catch (Exception e) {
+	        throw new RuntimeException("Error generando PDF", e);
+	    }
+
+	    return out.toByteArray();
+	}
 }
