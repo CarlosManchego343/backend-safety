@@ -2,6 +2,7 @@ package com.example.backend_safety.controller;
 
 import org.springframework.web.bind.annotation.*;
 
+import com.example.backend_safety.dto.LoginResponse;
 import com.example.backend_safety.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
@@ -14,10 +15,10 @@ public class AuthController {
 	
 	private final AuthService service;
 
-    @PostMapping("/login")
-    public String login(@RequestParam String email,
-                        @RequestParam String password) {
+	@PostMapping("/login")
+	public LoginResponse login(@RequestParam String email,
+	                           @RequestParam String password) {
 
-        return service.login(email, password);
-    }
+	    return service.login(email, password);
+	}
 }
