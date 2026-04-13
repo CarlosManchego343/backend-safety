@@ -1,12 +1,14 @@
 package com.example.backend_safety.config;
 
-import jakarta.servlet.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import jakarta.servlet.http.*;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -21,12 +23,13 @@ public class JwtFilter extends OncePerRequestFilter {
 	    }
 
 	    @Override
-	    protected void doFilterInternal(HttpServletRequest request,
-	                                    HttpServletResponse response,
-	                                    FilterChain filterChain)
-	            throws ServletException, IOException {
+	    protected void doFilterInternal(
+	            HttpServletRequest request,
+	            HttpServletResponse response,
+	            FilterChain filterChain
+	    ) throws ServletException, IOException {
 
-	        final String authHeader = request.getHeader("Authorization");
+	        String authHeader = request.getHeader("Authorization");
 
 	        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
 	            filterChain.doFilter(request, response);
@@ -35,21 +38,27 @@ public class JwtFilter extends OncePerRequestFilter {
 
 	        try {
 	            String token = authHeader.substring(7);
+
 	            String username = jwtService.extractUsername(token);
 
 	            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-	                var auth = new UsernamePasswordAuthenticationToken(
-	                        username,
-	                        null,
-	                        Collections.emptyList()
-	                );
+	                UsernamePasswordAuthenticationToken auth =
+	                        new UsernamePasswordAuthenticationToken(
+	                                username,
+	                                null,
+	                                Collections.emptyList()
+	                        );
 
 	                SecurityContextHolder.getContext().setAuthentication(auth);
 	            }
+	            
+	            System.out.println("🔥 JWT FILTER EJECUTÁNDOSE");
+	            System.out.println("🔥 AUTH HEADER: " + request.getHeader("Authorization"));
+	            System.out.println("🔥 AUTH OBJ: " + SecurityContextHolder.getContext().getAuthentication());
 
 	        } catch (Exception e) {
-	            // 🔴 Si el token falla, limpiar contexto
+	            System.out.println("❌ JWT ERROR: " + e.getMessage());
 	            SecurityContextHolder.clearContext();
 	        }
 
