@@ -3,6 +3,7 @@ package com.example.backend_safety.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -12,9 +13,10 @@ import lombok.RequiredArgsConstructor;
 
 @Configuration
 @RequiredArgsConstructor
+@EnableMethodSecurity
 public class SecurityConfig {
 
-    private final JwtFilter jwtFilter; // 👈 IMPORTANTE (inyectar el filtro)
+    private final JwtFilter jwtFilter; // 👈 tu filtro JWT
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -22,16 +24,24 @@ public class SecurityConfig {
         http
             .cors()
             .and()
-            .csrf().disable()
+            .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 👈 API sin sesiones
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
+                // ✅ Preflight (CORS)
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                // ✅ Endpoints públicos típicos
                 .requestMatchers("/auth/**").permitAll()
+
+                // ✅ 👇 ESTE ES EL QUE NECESITAS
+                .requestMatchers(HttpMethod.POST, "/api/evaluaciones/**").permitAll()
+
+                // 🔒 Todo lo demás requiere JWT
                 .anyRequest().authenticated()
             )
-            // 👇 AQUÍ ESTÁ LA CLAVE DEL PROBLEMA
+            // 👇 Se agrega el filtro JWT
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
